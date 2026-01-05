@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>صفحة استعلام المتدرب</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="app">
+    <h1 class="title">صفحة استعلام المتدرب</h1>
+
+    <div class="card" style="padding:26px 14px;">
+      <div class="inputRow">
+        <div class="label">الرقم التدريبي</div>
+        <input id="traineeId" inputmode="numeric" autocomplete="off" placeholder="اكتب رقمك التدريبي" />
+      </div>
+
+      <div style="text-align:center; margin-top:14px;">
+        <button class="btn" id="btnSearch">بحث</button>
+      </div>
+
+      <div class="hint">بعد البحث سيتم نقلك للوحة الخدمات</div>
+      <div class="error" id="errBox"></div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    // إذا توجد جلسة مسبقًا، نوديه للوحة الخدمات
+    const saved = getSession();
+    if (saved?.id) window.location.href = "dashboard.html";
+
+    const btn = qs("btnSearch");
+    const input = qs("traineeId");
+
+    async function doSearch(){
+      showError("errBox", "");
+      const id = (input.value || "").trim();
+      if (!id || id.length < 6) {
+        showError("errBox", "اكتب رقم تدريبي صحيح.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "جارٍ البحث...";
+      try{
+        const t = await searchTraineeById(id);
+        if (!t){
+          showError("errBox", "لم يتم العثور على متدرب بهذا الرقم.");
+          return;
+        }
+        saveSession(t);
+        window.location.href = "dashboard.html";
+      }catch(e){
+        console.error(e);
+        showError("errBox", "تعذر الاتصال بالخادم. تأكد من رابط الـ API.");
+      }finally{
+        btn.disabled = false;
+        btn.textContent = "بحث";
+      }
+    }
+
+    btn.addEventListener("click", doSearch);
+    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter") doSearch(); });
+  </script>
+</body>
+</html>
