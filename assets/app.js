@@ -1,7 +1,7 @@
 /***************
  * 1) ضع رابط Apps Script Web App هنا
  ***************/
-const API_URL = "https://script.google.com/macros/s/AKfycbynO5dmjvGzHx5JprBvn2yR1d_6ZXEIaj6Oe0qa2SinhYbo2en7lNHqOFfJft8LymcUrg/exec"; // مثال: https://script.google.com/macros/s/XXXX/exec
+const API_URL = "https://script.google.com/macros/s/AKfycbzorrBy3e0jMFfRhkdC4mkGhX4uO11vNmkgJQUl3TE2337VfpQ31UqpDhYih7SsyQCw/exec"; // مثال: https://script.google.com/macros/s/XXXX/exec
 
 /***************
  * 2) أدوات عامة
@@ -135,3 +135,4 @@ function renderTable(tableId, columns, rows){
     tbody.appendChild(tr);
   });
 }
+
