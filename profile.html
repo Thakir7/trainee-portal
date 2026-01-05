@@ -42,8 +42,8 @@
         // هذا نمط عرض: "حقل / قيمة"
         const rows = (data.rows || []).map(x => ({ field: x.field, value: x.value }));
         const columns = [
-          { key:"field", label:"الحقل" },
-          { key:"value", label:"القيمة" }
+          { key:"field", label:"التخصص" },
+          { key:"value", label:"المستوى" }
         ];
         renderTable("tbl", columns, rows);
       }catch(e){
@@ -54,3 +54,4 @@
   </script>
 </body>
 </html>
+
