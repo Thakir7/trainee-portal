@@ -3,8 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>بيانات المتدرب</title>
+  <title>البيانات</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .box{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:14px;
+      min-height:88px;
+    }
+    .box .k{color:rgba(255,255,255,.72); font-size:13px; margin-bottom:8px}
+    .box .v{font-size:18px; font-weight:900}
+    .ltr{direction:ltr; text-align:right}
+    @media (max-width:760px){ .grid{grid-template-columns:1fr} }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -22,36 +41,59 @@
 
       <div class="error" id="errBox"></div>
 
-      <div class="tableWrap">
-        <table id="tbl"><thead></thead><tbody></tbody></table>
+      <div class="grid">
+        <div class="box"><div class="k">التخصص</div><div class="v" id="vMajor">-</div></div>
+        <div class="box"><div class="k">المستوى</div><div class="v" id="vLevel">-</div></div>
+        <div class="box"><div class="k">مقر السكن</div><div class="v" id="vResidence">-</div></div>
+        <div class="box"><div class="k">الحالة الصحية</div><div class="v" id="vHealth">-</div></div>
+        <div class="box" style="grid-column:1/-1">
+          <div class="k">رقم الجوال</div>
+          <div class="v ltr" id="vPhone">-</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="assets/app.js"></script>
+  <!-- ✅ كسر كاش المتصفح -->
+  <script src="assets/app.js?v=11"></script>
   <script>
-    renderHeaderSession();
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
 
-    (async function(){
-      const s = requireSession(); if(!s) return;
-      try{
-        const data = await getProfile(s.id);
-        if(!data?.ok){ showError("errBox", data?.message || "لا توجد بيانات."); return; }
+    // ✅ نأخذ الرقم من الجلسة ثم نجلب أحدث بيانات من الـ API
+    const s = requireSession(); if(!s) throw new Error("No session");
+    setText("vId", s.id);
 
-        // هذا نمط عرض: "حقل / قيمة"
-        const rows = (data.rows || []).map(x => ({ field: x.field, value: x.value }));
-        const columns = [
-          { key:"field", label:"التخصص" },
-          { key:"value", label:"المستوى" }
-        ];
-        renderTable("tbl", columns, rows);
+    async function loadFresh(){
+      showError("errBox", "");
+      try{
+        const fresh = await searchTraineeById(s.id);
+        if (!fresh){
+          showError("errBox", "لم يتم العثور على المتدرب في ورقة Trainees.");
+          return;
+        }
+
+        // ✅ تحديث الجلسة
+        saveSession(fresh);
+
+        // بيانات الرأس
+        setText("vName", fresh.name);
+        setText("vId", fresh.id);
+        setText("vAdvisor", fresh.advisor);
+
+        // ✅ البيانات المطلوبة
+        setText("vMajor", fresh.major);
+        setText("vLevel", fresh.level);
+        setText("vResidence", fresh.residence);
+        setText("vHealth", fresh.health);
+        setText("vPhone", fresh.phone);
+
       }catch(e){
         console.error(e);
-        showError("errBox","تعذر الاتصال بالخادم.");
+        showError("errBox", "تعذر جلب البيانات من الخادم. تأكد من رابط الـ API.");
       }
-    })();
+    }
+
+    loadFresh();
   </script>
 </body>
 </html>
-
