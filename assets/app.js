@@ -119,7 +119,7 @@ function renderTable(tableId, columns, rows){
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = columns.length;
-    td.textContent = "لا توجد بيانات.";
+    td.textContent = "لا توجد بيانات مسجلة لك حالياً.";
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
@@ -135,4 +135,5 @@ function renderTable(tableId, columns, rows){
     tbody.appendChild(tr);
   });
 }
+
 
