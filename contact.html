@@ -5,6 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>التواصل</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .contactGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:12px;
+    }
+    .contactCard{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:14px;
+      min-height:86px;
+    }
+    .contactCard .k{color:rgba(255,255,255,.72); font-size:13px; margin-bottom:8px}
+    .contactCard .v{font-size:18px; font-weight:900; direction:ltr; text-align:right}
+    .waBtn{
+      margin-top:14px;
+      width:100%;
+      border:none;
+      cursor:pointer;
+      padding:16px 12px;
+      border-radius:18px;
+      background: linear-gradient(180deg, #43d17b, #18a957);
+      color:#072b12;
+      font-weight:900;
+      font-size:18px;
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+    }
+    .waBtn:disabled{opacity:.6; cursor:not-allowed}
+    @media (max-width:760px){
+      .contactGrid{grid-template-columns:1fr}
+    }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -22,34 +56,65 @@
 
       <div class="error" id="errBox"></div>
 
-      <div class="tableWrap">
-        <table id="tbl"><thead></thead><tbody></tbody></table>
+      <div class="contactGrid">
+        <div class="contactCard">
+          <div class="k">رقم جوال المتدرب</div>
+          <div class="v" id="vPhone">-</div>
+        </div>
+        <div class="contactCard">
+          <div class="k">إيميل المتدرب</div>
+          <div class="v" id="vEmail">-</div>
+        </div>
       </div>
 
-      <div class="hint">يمكن لاحقًا إضافة زر واتساب أو بريد المرشد</div>
+      <button class="waBtn" id="btnWA">التواصل عبر واتساب</button>
+      <div class="hint">سيتم فتح واتساب على رقم الجوال المسجل للمتدرب</div>
     </div>
   </div>
 
   <script src="assets/app.js"></script>
   <script>
-    renderHeaderSession();
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
 
-    (async function(){
-      const s = requireSession(); if(!s) return;
-      try{
-        const data = await getContact(s.id);
-        if(!data?.ok){ showError("errBox", data?.message || "لا توجد بيانات."); return; }
-        const columns = [
-          { key:"type", label:"النوع" },
-          { key:"value", label:"البيان" }
-        ];
-        renderTable("tbl", columns, data.rows || []);
-      }catch(e){
-        console.error(e);
-        showError("errBox","تعذر الاتصال بالخادم.");
-      }
-    })();
+    // ✅ جلسة المتدرب
+    const s = requireSession(); if(!s) throw new Error("No session");
+
+    // عرض بيانات العنوان
+    setText("vName", s.name);
+    setText("vId", s.id);
+    setText("vAdvisor", s.advisor);
+
+    // عرض بيانات التواصل
+    setText("vPhone", s.phone || "-");
+    setText("vEmail", s.email || "-");
+
+    // تحويل رقم الجوال لصيغة دولية للسعودية
+    function toKsaIntl(phone){
+      let p = String(phone || "").trim();
+      if (!p) return "";
+      p = p.replace(/[^\d+]/g, "");
+
+      if (p.startsWith("05")) return "966" + p.slice(1);
+      if (p.startsWith("5")) return "966" + p;
+      if (p.startsWith("+966")) return p.slice(1);
+      if (p.startsWith("966")) return p;
+
+      return p;
+    }
+
+    const waNumber = toKsaIntl(s.phone);
+    const btnWA = qs("btnWA");
+
+    if (!waNumber) {
+      btnWA.disabled = true;
+      showError("errBox", "لا يوجد رقم جوال مسجل للمتدرب في ورقة Trainees (عمود الجوال).");
+    }
+
+    btnWA.addEventListener("click", ()=>{
+      if (!waNumber) return;
+      const msg = encodeURIComponent(`السلام عليكم، بخصوص المتدرب ${s.name} (${s.id}).`);
+      window.open(`https://wa.me/${waNumber}?text=${msg}`, "_blank");
+    });
   </script>
 </body>
 </html>
