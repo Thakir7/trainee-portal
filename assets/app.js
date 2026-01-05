@@ -1,16 +1,16 @@
 /***************
- * 1) ضع رابط Apps Script Web App هنا
+ * رابط الـ Web App
  ***************/
-const API_URL = "https://script.google.com/macros/s/AKfycbzorrBy3e0jMFfRhkdC4mkGhX4uO11vNmkgJQUl3TE2337VfpQ31UqpDhYih7SsyQCw/exec"; // مثال: https://script.google.com/macros/s/XXXX/exec
+const API_URL = "https://script.google.com/macros/s/AKfycbynO5dmjvGzHx5JprBvn2yR1d_6ZXEIaj6Oe0qa2SinhYbo2en7lNHqOFfJft8LymcUrg/exec";
 
 /***************
- * 2) أدوات عامة
+ * أدوات عامة
  ***************/
 function qs(id){ return document.getElementById(id); }
 
 function setText(id, v){
   const el = qs(id);
-  if (el) el.textContent = v ?? "-";
+  if (el) el.textContent = (v !== undefined && v !== null && String(v).trim() !== "") ? v : "-";
 }
 
 function showError(id, msg){
@@ -20,6 +20,9 @@ function showError(id, msg){
   el.style.display = msg ? "block" : "none";
 }
 
+/***************
+ * جلسة المتدرب
+ ***************/
 function saveSession(trainee){
   localStorage.setItem("trainee_session", JSON.stringify(trainee));
 }
@@ -51,10 +54,11 @@ function renderHeaderSession(){
   setText("vAdvisor", s.advisor);
 }
 
+/***************
+ * API GET
+ ***************/
 async function apiGet(params){
-  if (!API_URL || !API_URL.startsWith("http")) {
-    throw new Error("API_URL not set");
-  }
+  if (!API_URL || !API_URL.startsWith("http")) throw new Error("API_URL not set");
   const url = API_URL + "?" + new URLSearchParams(params).toString();
   const res = await fetch(url, { method:"GET" });
   const data = await res.json();
@@ -62,39 +66,25 @@ async function apiGet(params){
 }
 
 /***************
- * 3) البحث عن متدرب
+ * البحث عن متدرب
  ***************/
 async function searchTraineeById(id){
   const data = await apiGet({ action:"trainee", id });
-  if (data?.ok && data?.trainee) return data.trainee;
+  if (data?.ok && data?.trainee) return data.trainee; // يحتوي phone/email
   return null;
 }
 
 /***************
- * 4) بيانات الخدمات (أمثلة)
- * كل خدمة لها action مختلف يرجع بياناتها من الشيت
+ * خدمات الموقع
  ***************/
-async function getSchedule(id){
-  return await apiGet({ action:"schedule", id });
-}
-async function getActivities(id){
-  return await apiGet({ action:"activities", id });
-}
-async function getExcuses(id){
-  return await apiGet({ action:"excuses", id });
-}
-async function getProfile(id){
-  return await apiGet({ action:"profile", id });
-}
-async function getContact(id){
-  return await apiGet({ action:"contact", id });
-}
-async function getViolations(id){
-  return await apiGet({ action:"violations", id });
-}
+async function getSchedule(id){ return await apiGet({ action:"schedule", id }); }
+async function getActivities(id){ return await apiGet({ action:"activities", id }); }
+async function getExcuses(id){ return await apiGet({ action:"excuses", id }); }
+async function getProfile(id){ return await apiGet({ action:"profile", id }); }
+async function getViolations(id){ return await apiGet({ action:"violations", id }); }
 
 /***************
- * 5) تعبئة جدول من JSON
+ * رسم جدول
  ***************/
 function renderTable(tableId, columns, rows){
   const table = qs(tableId);
@@ -105,7 +95,6 @@ function renderTable(tableId, columns, rows){
   thead.innerHTML = "";
   tbody.innerHTML = "";
 
-  // header
   const trh = document.createElement("tr");
   columns.forEach(c=>{
     const th = document.createElement("th");
@@ -114,7 +103,6 @@ function renderTable(tableId, columns, rows){
   });
   thead.appendChild(trh);
 
-  // body
   if (!rows || !rows.length){
     const tr = document.createElement("tr");
     const td = document.createElement("td");
@@ -135,5 +123,3 @@ function renderTable(tableId, columns, rows){
     tbody.appendChild(tr);
   });
 }
-
-
