@@ -35,9 +35,7 @@
       box-shadow: 0 12px 22px rgba(0,0,0,.22);
     }
     .waBtn:disabled{opacity:.6; cursor:not-allowed}
-    @media (max-width:760px){
-      .contactGrid{grid-template-columns:1fr}
-    }
+    @media (max-width:760px){ .contactGrid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -76,45 +74,70 @@
   <script>
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
 
-    // ✅ جلسة المتدرب
+    // ✅ نجيب الجلسة فقط لأخذ الرقم التدريبي، ثم نجلب أحدث بيانات من الـ API
     const s = requireSession(); if(!s) throw new Error("No session");
-
-    // عرض بيانات العنوان
-    setText("vName", s.name);
     setText("vId", s.id);
-    setText("vAdvisor", s.advisor);
 
-    // عرض بيانات التواصل
-    setText("vPhone", s.phone || "-");
-    setText("vEmail", s.email || "-");
-
-    // تحويل رقم الجوال لصيغة دولية للسعودية
     function toKsaIntl(phone){
       let p = String(phone || "").trim();
       if (!p) return "";
       p = p.replace(/[^\d+]/g, "");
 
+      // لو رقمك مثل 599953775 نخليه 9665....
       if (p.startsWith("05")) return "966" + p.slice(1);
       if (p.startsWith("5")) return "966" + p;
       if (p.startsWith("+966")) return p.slice(1);
       if (p.startsWith("966")) return p;
-
       return p;
     }
 
-    const waNumber = toKsaIntl(s.phone);
     const btnWA = qs("btnWA");
 
-    if (!waNumber) {
+    async function loadFreshTrainee(){
+      showError("errBox", "");
       btnWA.disabled = true;
-      showError("errBox", "لا يوجد رقم جوال مسجل للمتدرب في ورقة Trainees (عمود الجوال).");
+
+      try{
+        // ✅ جلب أحدث بيانات المتدرب من الـ API (بدل الاعتماد على localStorage القديم)
+        const fresh = await searchTraineeById(s.id);
+
+        if (!fresh){
+          showError("errBox", "لم يتم العثور على المتدرب في ورقة Trainees.");
+          return;
+        }
+
+        // ✅ تحديث الجلسة لتستفيد بقية الصفحات أيضاً
+        saveSession(fresh);
+
+        // عرض بيانات العنوان
+        setText("vName", fresh.name);
+        setText("vId", fresh.id);
+        setText("vAdvisor", fresh.advisor);
+
+        // عرض بيانات التواصل
+        setText("vPhone", fresh.phone || "-");
+        setText("vEmail", fresh.email || "-");
+
+        const waNumber = toKsaIntl(fresh.phone);
+        if (!waNumber){
+          showError("errBox", "لا يوجد رقم جوال مسجل للمتدرب في Trainees (عمود D).");
+          btnWA.disabled = true;
+          return;
+        }
+
+        btnWA.disabled = false;
+        btnWA.onclick = ()=>{
+          const msg = encodeURIComponent(`السلام عليكم، بخصوص المتدرب ${fresh.name} (${fresh.id}).`);
+          window.open(`https://wa.me/${waNumber}?text=${msg}`, "_blank");
+        };
+
+      }catch(e){
+        console.error(e);
+        showError("errBox", "تعذر جلب بيانات التواصل من الخادم.");
+      }
     }
 
-    btnWA.addEventListener("click", ()=>{
-      if (!waNumber) return;
-      const msg = encodeURIComponent(`السلام عليكم، بخصوص المتدرب ${s.name} (${s.id}).`);
-      window.open(`https://wa.me/${waNumber}?text=${msg}`, "_blank");
-    });
+    loadFreshTrainee();
   </script>
 </body>
 </html>
