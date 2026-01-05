@@ -1,7 +1,7 @@
 /***************
  * رابط الـ Web App
  ***************/
-const API_URL = "https://script.google.com/macros/s/AKfycbzorrBy3e0jMFfRhkdC4mkGhX4uO11vNmkgJQUl3TE2337VfpQ31UqpDhYih7SsyQCw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwhKWBTnVIpUUr3qvFz_bJ62dCpqH869d6-umOfATVE-HmvbTFhUCdC27XtkM6HRlxa-A/exec";
 
 /***************
  * أدوات عامة
@@ -123,4 +123,5 @@ function renderTable(tableId, columns, rows){
     tbody.appendChild(tr);
   });
 }
+
 
