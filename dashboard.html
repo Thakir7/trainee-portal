@@ -6,32 +6,27 @@
   <title>الخدمات</title>
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .btnGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:14px;
-      margin-top:14px;
-    }
+    .btnGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px;}
     .bigBtn{
-      border:none;cursor:pointer;
-      padding:18px 12px;
-      border-radius:18px;
-      background: rgba(50, 210, 210, .85);
-      color:#06333a;
-      font-weight:900;
-      font-size:22px;
+      border:none;cursor:pointer;padding:18px 12px;border-radius:18px;
+      background: rgba(50,210,210,.85);color:#06333a;font-weight:900;font-size:22px;
       box-shadow:0 14px 26px rgba(0,0,0,.22);
     }
-    @media (max-width:900px){
-      .btnGrid{grid-template-columns:1fr}
+    .topActions{display:flex;gap:10px;align-items:center}
+    .miniBtn{
+      border:none;cursor:pointer;padding:10px 12px;border-radius:14px;
+      background: rgba(255,255,255,.10);color:#fff;font-weight:800;
     }
+    @media (max-width:900px){ .btnGrid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topBar">
       <h1 class="title" style="margin:0;font-size:32px;">الخدمات</h1>
-      <button class="homeBtn" id="btnLogout" title="تسجيل خروج">⦿</button>
+      <div class="topActions">
+        <button class="miniBtn" id="btnLogout">تسجيل خروج</button>
+      </div>
     </div>
 
     <div class="card">
@@ -44,54 +39,46 @@
       <div class="error" id="errBox"></div>
 
       <div class="btnGrid">
-        <button class="bigBtn" onclick="go('schedule.html')">الجدول</button>
-        <button class="bigBtn" onclick="go('activities.html')">الأنشطة</button>
-        <button class="bigBtn" onclick="go('excuses.html')">الأعذار</button>
-        <button class="bigBtn" onclick="go('violations.html')">المخالفات</button>
-        <button class="bigBtn" onclick="go('contact.html')">التواصل</button>
-        <button class="bigBtn" onclick="go('profile.html')">البيانات</button>
+        <button class="bigBtn" onclick="location.href='schedule.html'">الجدول</button>
+        <button class="bigBtn" onclick="location.href='activities.html'">الأنشطة</button>
+        <button class="bigBtn" onclick="location.href='excuses.html'">الأعذار</button>
+        <button class="bigBtn" onclick="location.href='violations.html'">المخالفات</button>
+        <button class="bigBtn" onclick="location.href='contact.html'">التواصل</button>
+        <button class="bigBtn" onclick="location.href='profile.html'">البيانات</button>
       </div>
 
       <div class="hint">اضغط على أي خدمة لعرض بياناتها</div>
     </div>
   </div>
 
-  <script src="assets/app.js?v=200"></script>
+  <script src="assets/app.js?v=999"></script>
   <script>
-    function go(url){ window.location.href = url; }
+    const s = requireSession();
+    if (!s) throw new Error("no session");
 
-    // ✅ إذا ما فيه جلسة رجّع للبحث
-    const s = requireSession(); if(!s) throw new Error("No session");
+    // 
+    fillHeaderFromSession();
 
-    // ✅ جلب أحدث بيانات من API لتحديث الرأس دائماً
-    async function loadFresh(){
+    // 
+    (async ()=>{
       showError("errBox","");
       try{
         const fresh = await searchTraineeById(s.id);
         if (fresh){
           saveSession(fresh);
-          setText("vName", fresh.name);
-          setText("vId", fresh.id);
-          setText("vAdvisor", fresh.advisor);
+          fillHeaderFromSession();
         } else {
           showError("errBox","لم يتم العثور على المتدرب. أعد البحث.");
         }
       }catch(e){
         console.error(e);
-        // لو API_URL غير مضبوط سيظهر هنا
-        showError("errBox","تعذر الاتصال بالخادم. تحقق من رابط API في assets/app.js");
-        // نعرض من الجلسة كحل مؤقت
-        setText("vName", s.name);
-        setText("vId", s.id);
-        setText("vAdvisor", s.advisor);
+        showError("errBox","تعذر الاتصال بالخادم (API).");
       }
-    }
-
-    loadFresh();
+    })();
 
     qs("btnLogout").addEventListener("click", ()=>{
       clearSession();
-      window.location.href = "index.html";
+      location.replace("index.html");
     });
   </script>
 </body>
