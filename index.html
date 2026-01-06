@@ -13,9 +13,7 @@
       border-radius:16px;
       border:1px solid rgba(255,255,255,.18);
       background: rgba(255,255,255,.06);
-      color:#fff;
-      font-size:20px;
-      outline:none;
+      color:#fff;font-size:20px;outline:none;
     }
     .btn{
       margin-top:14px;width:100%;
@@ -26,6 +24,13 @@
       box-shadow:0 12px 22px rgba(0,0,0,.22);
     }
     .btn:disabled{opacity:.6;cursor:not-allowed}
+    .miniRow{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+    .miniBtn{
+      border:none;cursor:pointer;
+      padding:10px 12px;border-radius:14px;
+      background: rgba(255,255,255,.10);
+      color:#fff;font-weight:800;
+    }
   </style>
 </head>
 <body>
@@ -39,50 +44,56 @@
       <input class="inp" id="inpId" inputmode="numeric" placeholder="اكتب الرقم التدريبي" />
       <button class="btn" id="btnSearch">بحث</button>
       <div class="error" id="errBox"></div>
+
+      <div class="miniRow">
+        <button class="miniBtn" id="btnGoDash" style="display:none;">العودة للوحة الخدمات</button>
+        <button class="miniBtn" id="btnLogout" style="display:none;">تسجيل خروج</button>
+      </div>
+
       <div class="hint">بعد نجاح البحث سيتم نقلك إلى لوحة الخدمات</div>
     </div>
   </div>
 
-  <script src="assets/app.js?v=200"></script>
+  <script src="assets/app.js?v=999"></script>
   <script>
-    // ✅ دائما نبدأ من صفحة البحث (تمسح جلسة قديمة لتجنب التعارض)
-    clearSession();
-
     const btn = qs("btnSearch");
     const inp = qs("inpId");
+    const btnGoDash = qs("btnGoDash");
+    const btnLogout = qs("btnLogout");
+
+    // إذا توجد جلسة، أعرض أزرار مساعدة
+    const s = getSession();
+    if (s?.id){
+      btnGoDash.style.display = "inline-block";
+      btnLogout.style.display = "inline-block";
+      btnGoDash.onclick = ()=> location.replace("dashboard.html");
+      btnLogout.onclick = ()=> { clearSession(); location.replace("index.html"); };
+    }
 
     function onlyDigits(s){ return String(s||"").replace(/\D/g,""); }
 
     btn.addEventListener("click", async ()=>{
-      showError("errBox", "");
+      showError("errBox","");
       btn.disabled = true;
 
       try{
         const id = onlyDigits(inp.value).trim();
-        if (!id){
-          showError("errBox","فضلاً أدخل الرقم التدريبي");
-          btn.disabled = false; return;
-        }
+        if (!id){ showError("errBox","فضلاً أدخل الرقم التدريبي"); btn.disabled=false; return; }
 
         const t = await searchTraineeById(id);
-        if (!t){
-          showError("errBox","لم يتم العثور على متدرب بهذا الرقم");
-          btn.disabled = false; return;
-        }
+        if (!t){ showError("errBox","لم يتم العثور على متدرب بهذا الرقم"); btn.disabled=false; return; }
 
         saveSession(t);
-        window.location.href = "dashboard.html";
+        location.replace("dashboard.html");
 
       }catch(e){
         console.error(e);
-        showError("errBox", "تعذر الاتصال بالخادم. تحقق من رابط الـ API في assets/app.js");
-        btn.disabled = false;
+        showError("errBox","تعذر الاتصال بالخادم. تحقق من رابط الـ API.");
+        btn.disabled=false;
       }
     });
 
-    inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") btn.click(); });
+    inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") btn.click(); });
   </script>
 </body>
 </html>
-
-
