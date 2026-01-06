@@ -1,5 +1,5 @@
 // ✅ رابط Web App الصحيح
-const API_URL = "https://script.google.com/macros/s/AKfycbw2Uqi5HXSamWWIGpsqeNU3nBQ2Z9ZMHhGc28bx0ZKhcnyP54-gAo-KsYYIX2NPIiFh9w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw2LRgNheF2j1-b0R7SoLXgIirYyEc49AOoY6RJ33kKkA8jpuGFO3ByvdQ5CeKr7BNZMg/exec";
 
 // ===== أدوات =====
 function qs(id){ return document.getElementById(id); }
@@ -91,4 +91,5 @@ function fillHeaderFromSession(){
   setText("vId", s.id);
   setText("vAdvisor", s.advisor);
 }
+
 
