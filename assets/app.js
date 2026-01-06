@@ -1,10 +1,10 @@
 /***************
- * 
+ * ✅ رابط Web App الصحيح
  ***************/
 const API_URL = "https://script.google.com/macros/s/AKfycbw2Uqi5HXSamWWIGpsqeNU3nBQ2Z9ZMHhGc28bx0ZKhcnyP54-gAo-KsYYIX2NPIiFh9w/exec";
 
 /***************
- * أدوات عامة
+ 
  ***************/
 function qs(id){ return document.getElementById(id); }
 
@@ -22,45 +22,60 @@ function showError(id, msg){
 }
 
 /***************
- * جلسة المتدرب
+ * 
  ***************/
 function saveSession(trainee){
   localStorage.setItem("trainee_session", JSON.stringify(trainee));
 }
-
 function getSession(){
   const raw = localStorage.getItem("trainee_session");
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
-
 function clearSession(){
   localStorage.removeItem("trainee_session");
 }
 
+/***************
+ * ✅ حماية الصفحات من Loop
+ ***************/
+function isIndexPage(){
+  const p = (location.pathname || "").toLowerCase();
+  return (
+    p.endsWith("/trainee-portal/") ||
+    p.endsWith("/trainee-portal") ||
+    p.endsWith("/index.html")
+  );
+}
+
+/**
+ *
+ */
 function requireSession(){
   const s = getSession();
-  if (!s || !s.id) {
-    window.location.href = "index.html";
+  if (!s || !s.id){
+    if (!isIndexPage()) location.replace("index.html");
     return null;
   }
   return s;
 }
 
 /***************
- * API GET (مع كسر الكاش)
+ * 
  ***************/
 async function apiGet(params){
-  if (!API_URL || !API_URL.startsWith("http")) {
-    throw new Error("API_URL غير مضبوط في assets/app.js");
-  }
-  params._t = Date.now(); // ✅ كسر الكاش
+  params._t = Date.now(); // 
   const url = API_URL + "?" + new URLSearchParams(params).toString();
+
   const res = await fetch(url, { method:"GET" });
 
-  // لو رجع HTML أو خطأ، هذا السطر سيكشف المشكلة
-  const data = await res.json();
-  return data;
+  /
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("API did not return JSON");
+  }
 }
 
 async function searchTraineeById(id){
@@ -69,3 +84,13 @@ async function searchTraineeById(id){
   return null;
 }
 
+/***************
+ * ✅ 
+ ***************/
+function fillHeaderFromSession(prefix=""){
+  const s = getSession();
+  if (!s) return;
+  setText(prefix+"vName", s.name);
+  setText(prefix+"vId", s.id);
+  setText(prefix+"vAdvisor", s.advisor);
+}
