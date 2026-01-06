@@ -53,6 +53,13 @@
       </div>
     </div>
   </div>
+<script>
+  const trainee = JSON.parse(sessionStorage.getItem("trainee"));
+  if (!trainee) {
+    // 
+    window.location.href = "index.html";
+  }
+</script>
 
   <script src="assets/app.js?v=200"></script>
   <script>
@@ -94,3 +101,4 @@
   </script>
 </body>
 </html>
+
