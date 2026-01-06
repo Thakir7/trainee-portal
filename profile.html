@@ -46,48 +46,47 @@
         <div class="box"><div class="k">المستوى</div><div class="v" id="vLevel">-</div></div>
         <div class="box"><div class="k">مقر السكن</div><div class="v" id="vResidence">-</div></div>
         <div class="box"><div class="k">الحالة الصحية</div><div class="v" id="vHealth">-</div></div>
-        <div class="box" style="grid-column:1/-1"><div class="k">رقم الجوال</div><div class="v ltr" id="vPhone">-</div></div>
+        <div class="box" style="grid-column:1/-1">
+          <div class="k">رقم الجوال</div>
+          <div class="v ltr" id="vPhone">-</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ✅ كسر كاش ملفات الموقع -->
-  <script src="assets/app.js?v=99"></script>
+  <script src="assets/app.js?v=200"></script>
   <script>
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
 
     const s = requireSession(); if(!s) throw new Error("No session");
-    setText("vId", s.id);
 
     async function loadFresh(){
-      showError("errBox", "");
+      showError("errBox","");
       try{
         const fresh = await searchTraineeById(s.id);
-        console.log("PROFILE fresh =", fresh);
-
         if (!fresh){
-          showError("errBox", "لم يتم العثور على المتدرب في ورقة Trainees.");
+          showError("errBox","لم يتم العثور على المتدرب في Trainees.");
           return;
         }
-
-        // 
         saveSession(fresh);
 
-        // 
         setText("vName", fresh.name);
         setText("vId", fresh.id);
         setText("vAdvisor", fresh.advisor);
 
-        // 
         setText("vMajor", fresh.major);
         setText("vLevel", fresh.level);
         setText("vResidence", fresh.residence);
         setText("vHealth", fresh.health);
         setText("vPhone", fresh.phone);
-
       }catch(e){
         console.error(e);
-        showError("errBox", "تعذر جلب البيانات من الخادم. تأكد من رابط الـ API.");
+        showError("errBox","تعذر جلب البيانات من الخادم. تحقق من API_URL في assets/app.js");
+        // fallback من الجلسة
+        setText("vName", s.name);
+        setText("vId", s.id);
+        setText("vAdvisor", s.advisor);
+        setText("vPhone", s.phone);
       }
     }
 
