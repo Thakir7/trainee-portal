@@ -1,144 +1,52 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>التواصل</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <style>
-    .contactGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-      margin-top:12px;
-    }
-    .contactCard{
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:14px;
-      min-height:86px;
-    }
-    .contactCard .k{color:rgba(255,255,255,.72); font-size:13px; margin-bottom:8px}
-    .contactCard .v{font-size:18px; font-weight:900; direction:ltr; text-align:right}
-    .waBtn{
-      margin-top:14px;
-      width:100%;
-      border:none;
-      cursor:pointer;
-      padding:16px 12px;
-      border-radius:18px;
-      background: linear-gradient(180deg, #43d17b, #18a957);
-      color:#072b12;
-      font-weight:900;
-      font-size:18px;
-      box-shadow: 0 12px 22px rgba(0,0,0,.22);
-    }
-    .waBtn:disabled{opacity:.6; cursor:not-allowed}
-    @media (max-width:760px){ .contactGrid{grid-template-columns:1fr} }
-  </style>
+<meta charset="utf-8">
+<title>التواصل</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.box{background:rgba(255,255,255,.06);padding:16px;border-radius:16px;margin-top:12px}
+.btn{
+  display:block;width:100%;margin-top:12px;
+  padding:14px;border:none;border-radius:14px;
+  background:#25D366;color:#083018;
+  font-size:18px;font-weight:900;cursor:pointer
+}
+.ltr{direction:ltr;text-align:right}
+</style>
 </head>
 <body>
-  <div class="app">
-    <div class="topBar">
-      <h1 class="title" style="margin:0; font-size:28px;">التواصل</h1>
-      <button class="homeBtn" id="btnHome" title="الرئيسية">⌂</button>
+<div class="app">
+  <div class="topBar">
+    <h1 class="title">التواصل</h1>
+    <button class="miniBtn" onclick="location.href='dashboard.html'">الرئيسية</button>
+  </div>
+
+  <div class="card">
+    <div class="infoBox">
+      <div class="infoItem"><div class="k">اسم المتدرب</div><div class="v" id="vName">-</div></div>
+      <div class="infoItem"><div class="k">الرقم التدريبي</div><div class="v" id="vId">-</div></div>
+      <div class="infoItem"><div class="k">المرشد الأكاديمي</div><div class="v" id="vAdvisor">-</div></div>
     </div>
 
-    <div class="card">
-      <div class="infoBox">
-        <div class="infoItem"><div class="k">اسم المتدرب</div><div class="v" id="vName">-</div></div>
-        <div class="infoItem"><div class="k">الرقم التدريبي</div><div class="v" id="vId">-</div></div>
-        <div class="infoItem"><div class="k">المرشد الأكاديمي</div><div class="v" id="vAdvisor">-</div></div>
-      </div>
-
-      <div class="error" id="errBox"></div>
-
-      <div class="contactGrid">
-        <div class="contactCard">
-          <div class="k">رقم جوال المتدرب</div>
-          <div class="v" id="vPhone">-</div>
-        </div>
-        <div class="contactCard">
-          <div class="k">إيميل المتدرب</div>
-          <div class="v" id="vEmail">-</div>
-        </div>
-      </div>
-
-      <button class="waBtn" id="btnWA">التواصل عبر واتساب</button>
-      <div class="hint">سيتم فتح واتساب على رقم الجوال المسجل للمتدرب</div>
+    <div class="box">
+      <div class="k">رقم الجوال</div>
+      <div class="v ltr" id="vPhone">-</div>
+      <button class="btn" id="btnWhats">التواصل عبر واتساب</button>
     </div>
   </div>
+</div>
+
+<script src="assets/app.js?v=1400"></script>
 <script>
-  const trainee = JSON.parse(sessionStorage.getItem("trainee"));
-  if (!trainee) {
-    // إذا فتح الصفحة مباشرة أو فقدت الجلسة
-    window.location.href = "index.html";
-  }
+  const s = requireSession();
+  fillHeaderFromSession();
+  setText("vPhone", s.phone);
+
+  qs("btnWhats").onclick = ()=>{
+    if (!s.phone) return alert("لا يوجد رقم جوال");
+    window.open(`https://wa.me/966${s.phone.replace(/^0/,"")}`, "_blank");
+  };
 </script>
-
-  <script src="assets/app.js?v=200"></script>
-  <script>
-    qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
-
-    const s = requireSession(); if(!s) throw new Error("No session");
-    const btnWA = qs("btnWA");
-
-    function toKsaIntl(phone){
-      let p = String(phone || "").trim();
-      if (!p) return "";
-      p = p.replace(/[^\d+]/g, "");
-      if (p.startsWith("05")) return "966" + p.slice(1);
-      if (p.startsWith("5")) return "966" + p;
-      if (p.startsWith("+966")) return p.slice(1);
-      if (p.startsWith("966")) return p;
-      return p;
-    }
-
-    async function loadFresh(){
-      showError("errBox","");
-      btnWA.disabled = true;
-
-      try{
-        const fresh = await searchTraineeById(s.id);
-        if (!fresh){
-          showError("errBox","لم يتم العثور على المتدرب.");
-          return;
-        }
-        saveSession(fresh);
-
-        setText("vName", fresh.name);
-        setText("vId", fresh.id);
-        setText("vAdvisor", fresh.advisor);
-        setText("vPhone", fresh.phone);
-        setText("vEmail", fresh.email);
-
-        const wa = toKsaIntl(fresh.phone);
-        if (!wa){
-          showError("errBox","لا يوجد رقم جوال مسجل في Trainees (عمود D).");
-          return;
-        }
-
-        btnWA.disabled = false;
-        btnWA.onclick = ()=>{
-          const msg = encodeURIComponent(`السلام عليكم، بخصوص المتدرب ${fresh.name} (${fresh.id}).`);
-          window.open(`https://wa.me/${wa}?text=${msg}`, "_blank");
-        };
-
-      }catch(e){
-        console.error(e);
-        showError("errBox","تعذر الاتصال بالخادم. تحقق من API_URL في assets/app.js");
-        // fallback
-        setText("vName", s.name);
-        setText("vId", s.id);
-        setText("vAdvisor", s.advisor);
-        setText("vPhone", s.phone);
-        setText("vEmail", s.email);
-      }
-    }
-
-    loadFresh();
-  </script>
 </body>
 </html>
-
