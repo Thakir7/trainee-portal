@@ -5,64 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>صفحة استعلام المتدرب</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .searchWrap{max-width:700px;margin:0 auto;}
+    .inp{
+      width:100%;
+      padding:16px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-size:20px;
+      outline:none;
+    }
+    .btn{
+      margin-top:14px;width:100%;
+      border:none;cursor:pointer;
+      padding:16px 12px;border-radius:18px;
+      background: linear-gradient(180deg,#2fb4ff,#1186d6);
+      color:#07223a;font-weight:900;font-size:20px;
+      box-shadow:0 12px 22px rgba(0,0,0,.22);
+    }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+  </style>
 </head>
 <body>
   <div class="app">
-    <h1 class="title">صفحة استعلام المتدرب</h1>
+    <div class="topBar">
+      <h1 class="title" style="margin:0;font-size:30px;">صفحة استعلام المتدرب</h1>
+    </div>
 
-    <div class="card" style="padding:26px 14px;">
-      <div class="inputRow">
-        <div class="label">الرقم التدريبي</div>
-        <input id="traineeId" inputmode="numeric" autocomplete="off" placeholder="اكتب رقمك التدريبي" />
-      </div>
-
-      <div style="text-align:center; margin-top:14px;">
-        <button class="btn" id="btnSearch">بحث</button>
-      </div>
-
-      <div class="hint">بعد البحث سيتم نقلك للوحة الخدمات</div>
+    <div class="card searchWrap">
+      <div class="k" style="margin-bottom:10px;color:rgba(255,255,255,.8)">الرقم التدريبي</div>
+      <input class="inp" id="inpId" inputmode="numeric" placeholder="اكتب الرقم التدريبي" />
+      <button class="btn" id="btnSearch">بحث</button>
       <div class="error" id="errBox"></div>
+      <div class="hint">بعد نجاح البحث سيتم نقلك إلى لوحة الخدمات</div>
     </div>
   </div>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=200"></script>
   <script>
-    const saved = getSession();
-    if (saved?.id) window.location.href = "dashboard.html";
+    // ✅ دائما نبدأ من صفحة البحث (تمسح جلسة قديمة لتجنب التعارض)
+    clearSession();
 
     const btn = qs("btnSearch");
-    const input = qs("traineeId");
+    const inp = qs("inpId");
 
-    async function doSearch(){
+    function onlyDigits(s){ return String(s||"").replace(/\D/g,""); }
+
+    btn.addEventListener("click", async ()=>{
       showError("errBox", "");
-      const id = (input.value || "").trim();
-      if (!id || id.length < 6) {
-        showError("errBox", "اكتب رقم تدريبي صحيح.");
-        return;
-      }
-
       btn.disabled = true;
-      btn.textContent = "جارٍ البحث...";
+
       try{
+        const id = onlyDigits(inp.value).trim();
+        if (!id){
+          showError("errBox","فضلاً أدخل الرقم التدريبي");
+          btn.disabled = false; return;
+        }
+
         const t = await searchTraineeById(id);
         if (!t){
-          showError("errBox", "لم يتم العثور على متدرب بهذا الرقم.");
-          return;
+          showError("errBox","لم يتم العثور على متدرب بهذا الرقم");
+          btn.disabled = false; return;
         }
+
         saveSession(t);
         window.location.href = "dashboard.html";
+
       }catch(e){
         console.error(e);
-        showError("errBox", "تعذر الاتصال بالخادم. تأكد من رابط الـ API.");
-      }finally{
+        showError("errBox", "تعذر الاتصال بالخادم. تحقق من رابط الـ API في assets/app.js");
         btn.disabled = false;
-        btn.textContent = "بحث";
       }
-    }
+    });
 
-    btn.addEventListener("click", doSearch);
-    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter") doSearch(); });
+    inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") btn.click(); });
   </script>
 </body>
 </html>
-
