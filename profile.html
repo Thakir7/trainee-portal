@@ -54,12 +54,12 @@
     </div>
   </div>
 
-  <!-- ✅ كسر كاش المتصفح -->
+  
   <script src="assets/app.js?v=11"></script>
   <script>
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
 
-    // ✅ نأخذ الرقم من الجلسة ثم نجلب أحدث بيانات من الـ API
+
     const s = requireSession(); if(!s) throw new Error("No session");
     setText("vId", s.id);
 
@@ -72,15 +72,15 @@
           return;
         }
 
-        // ✅ تحديث الجلسة
+    
         saveSession(fresh);
 
-        // بيانات الرأس
+        // 
         setText("vName", fresh.name);
         setText("vId", fresh.id);
         setText("vAdvisor", fresh.advisor);
 
-        // ✅ البيانات المطلوبة
+        // 
         setText("vMajor", fresh.major);
         setText("vLevel", fresh.level);
         setText("vResidence", fresh.residence);
@@ -97,3 +97,4 @@
   </script>
 </body>
 </html>
+
