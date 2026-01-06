@@ -29,6 +29,13 @@
       </div>
     </div>
   </div>
+<script>
+  const trainee = JSON.parse(sessionStorage.getItem("trainee"));
+  if (!trainee) {
+    // إذا فتح الصفحة مباشرة أو فقدت الجلسة
+    window.location.href = "index.html";
+  }
+</script>
 
   <script src="assets/app.js"></script>
   <script>
@@ -54,3 +61,4 @@
   </script>
 </body>
 </html>
+
