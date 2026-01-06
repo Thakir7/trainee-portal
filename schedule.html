@@ -5,12 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الجدول</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    table{width:100%; border-collapse:collapse; margin-top:12px; overflow:hidden; border-radius:14px}
+    th,td{padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.12); text-align:center}
+    th{background:rgba(255,255,255,.08)}
+    tr:hover td{background:rgba(255,255,255,.04)}
+  </style>
 </head>
 <body>
   <div class="app">
     <div class="topBar">
-      <h1 class="title" style="margin:0; font-size:28px;">الجدول</h1>
-      <button class="homeBtn" id="btnHome" title="الرئيسية">⌂</button>
+      <h1 class="title" style="margin:0;font-size:28px;">الجدول</h1>
+      <button class="miniBtn" onclick="location.href='dashboard.html'">الرئيسية</button>
     </div>
 
     <div class="card">
@@ -22,47 +28,55 @@
 
       <div class="error" id="errBox"></div>
 
-      <div class="tableWrap">
-        <table id="tbl">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>اليوم</th>
+            <th>الوقت</th>
+            <th>المقرر</th>
+            <th>القاعة</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
 
-      <div class="hint">يعرض جدول المتدرب من ملف البيانات</div>
+      <div class="hint" id="emptyMsg" style="display:none;">لا توجد بيانات.</div>
     </div>
   </div>
-<script>
-  const trainee = JSON.parse(sessionStorage.getItem("trainee"));
-  if (!trainee) {
-    // 
-    window.location.href = "index.html";
-  }
-</script>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=1200"></script>
   <script>
-    renderHeaderSession();
-    qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
+    const s = requireSession(); if(!s) throw new Error("no session");
+    fillHeaderFromSession();
 
-    (async function(){
+    function esc(x){ return String(x??"").replace(/[<>&"]/g, m=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;", "\"":"&quot;" }[m])); }
+
+    (async ()=>{
       showError("errBox","");
-      const s = requireSession(); if(!s) return;
       try{
-        const data = await getSchedule(s.id);
-        if(!data?.ok){
-          showError("errBox", data?.message || "تعذر جلب البيانات.");
-          renderTable("tbl", [{key:"x",label:""}], []);
-          return;
-        }
-        // أعمدة الجدول (غيّرها حسب شيتك)
-        const columns = [
-          { key:"day", label:"اليوم" },
-          { key:"time", label:"الوقت" },
-          { key:"course", label:"المقرر" },
-          { key:"room", label:"القاعة" }
-        ];
-        renderTable("tbl", columns, data.rows || []);
+        const data = await apiGet({ action:"schedule", id: s.id });
+        if (!data?.ok){ showError("errBox", data?.message || "تعذر جلب البيانات"); return; }
+
+        // تحديث الجلسة من API
+        if (data.trainee){ saveSession(data.trainee); fillHeaderFromSession(); }
+
+        const tbody = qs("rows");
+        tbody.innerHTML = "";
+
+        const rows = data.rows || [];
+        if (!rows.length){ qs("emptyMsg").style.display="block"; return; }
+
+        rows.forEach(r=>{
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${esc(r.day)}</td>
+            <td>${esc(r.time)}</td>
+            <td>${esc(r.course)}</td>
+            <td>${esc(r.room)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
       }catch(e){
         console.error(e);
         showError("errBox","تعذر الاتصال بالخادم.");
@@ -71,4 +85,3 @@
   </script>
 </body>
 </html>
-
