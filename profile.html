@@ -6,30 +6,23 @@
   <title>البيانات</title>
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-      margin-top:14px;
-    }
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
     .box{
       background: rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:14px;
-      min-height:88px;
+      border-radius:16px;padding:14px;min-height:88px;
     }
     .box .k{color:rgba(255,255,255,.72); font-size:13px; margin-bottom:8px}
     .box .v{font-size:18px; font-weight:900}
-    .ltr{direction:ltr; text-align:right}
+    .ltr{direction:ltr;text-align:right}
     @media (max-width:760px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topBar">
-      <h1 class="title" style="margin:0; font-size:28px;">البيانات</h1>
-      <button class="homeBtn" id="btnHome" title="الرئيسية">⌂</button>
+      <h1 class="title" style="margin:0;font-size:28px;">البيانات</h1>
+      <button class="miniBtn" onclick="location.href='dashboard.html'">الرئيسية</button>
     </div>
 
     <div class="card">
@@ -46,59 +39,39 @@
         <div class="box"><div class="k">المستوى</div><div class="v" id="vLevel">-</div></div>
         <div class="box"><div class="k">مقر السكن</div><div class="v" id="vResidence">-</div></div>
         <div class="box"><div class="k">الحالة الصحية</div><div class="v" id="vHealth">-</div></div>
-        <div class="box" style="grid-column:1/-1">
-          <div class="k">رقم الجوال</div>
-          <div class="v ltr" id="vPhone">-</div>
-        </div>
+        <div class="box" style="grid-column:1/-1"><div class="k">رقم الجوال</div><div class="v ltr" id="vPhone">-</div></div>
       </div>
     </div>
   </div>
-<script>
-  const trainee = JSON.parse(sessionStorage.getItem("trainee"));
-  if (!trainee) {
-    // 
-    window.location.href = "index.html";
-  }
-</script>
 
-  <script src="assets/app.js?v=200"></script>
+  <script src="assets/app.js?v=999"></script>
   <script>
-    qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
+    const s = requireSession();
+    if (!s) throw new Error("no session");
 
-    const s = requireSession(); if(!s) throw new Error("No session");
+    // 
+    fillHeaderFromSession();
 
-    async function loadFresh(){
+    (async ()=>{
       showError("errBox","");
       try{
         const fresh = await searchTraineeById(s.id);
-        if (!fresh){
-          showError("errBox","لم يتم العثور على المتدرب في Trainees.");
-          return;
-        }
-        saveSession(fresh);
+        if (!fresh){ showError("errBox","لم يتم العثور على المتدرب."); return; }
 
-        setText("vName", fresh.name);
-        setText("vId", fresh.id);
-        setText("vAdvisor", fresh.advisor);
+        saveSession(fresh);
+        fillHeaderFromSession();
 
         setText("vMajor", fresh.major);
         setText("vLevel", fresh.level);
         setText("vResidence", fresh.residence);
         setText("vHealth", fresh.health);
         setText("vPhone", fresh.phone);
+
       }catch(e){
         console.error(e);
-        showError("errBox","تعذر جلب البيانات من الخادم. تحقق من API_URL في assets/app.js");
-        // fallback من الجلسة
-        setText("vName", s.name);
-        setText("vId", s.id);
-        setText("vAdvisor", s.advisor);
-        setText("vPhone", s.phone);
+        showError("errBox","تعذر الاتصال بالخادم (API).");
       }
-    }
-
-    loadFresh();
+    })();
   </script>
 </body>
 </html>
-
