@@ -1,5 +1,5 @@
 /***************
- * رابط الـ Web App
+ * رابط الـ Web App (ضع رابطك العام بدون u/1)
  ***************/
 const API_URL = "https://script.google.com/macros/s/AKfycbwhKWBTnVIpUUr3qvFz_bJ62dCpqH869d6-umOfATVE-HmvbTFhUCdC27XtkM6HRlxa-A/exec";
 
@@ -46,82 +46,25 @@ function requireSession(){
   return s;
 }
 
-function renderHeaderSession(){
-  const s = requireSession();
-  if (!s) return;
-  setText("vName", s.name);
-  setText("vId", s.id);
-  setText("vAdvisor", s.advisor);
-}
-
 /***************
- * API GET
+ * API GET (مع كسر الكاش)
  ***************/
 async function apiGet(params){
   if (!API_URL || !API_URL.startsWith("http")) throw new Error("API_URL not set");
+  params._t = Date.now(); // ✅ كسر الكاش
   const url = API_URL + "?" + new URLSearchParams(params).toString();
+
   const res = await fetch(url, { method:"GET" });
+  // لو مو JSON راح يفشل هنا ويطلع catch في الصفحات
   const data = await res.json();
   return data;
 }
 
 /***************
- * البحث عن متدرب
+
  ***************/
 async function searchTraineeById(id){
   const data = await apiGet({ action:"trainee", id });
-  if (data?.ok && data?.trainee) return data.trainee; // يحتوي phone/email
+  if (data?.ok && data?.trainee) return data.trainee;
   return null;
 }
-
-/***************
- * خدمات الموقع
- ***************/
-async function getSchedule(id){ return await apiGet({ action:"schedule", id }); }
-async function getActivities(id){ return await apiGet({ action:"activities", id }); }
-async function getExcuses(id){ return await apiGet({ action:"excuses", id }); }
-async function getProfile(id){ return await apiGet({ action:"profile", id }); }
-async function getViolations(id){ return await apiGet({ action:"violations", id }); }
-
-/***************
- * رسم جدول
- ***************/
-function renderTable(tableId, columns, rows){
-  const table = qs(tableId);
-  if (!table) return;
-
-  const thead = table.querySelector("thead");
-  const tbody = table.querySelector("tbody");
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
-
-  const trh = document.createElement("tr");
-  columns.forEach(c=>{
-    const th = document.createElement("th");
-    th.textContent = c.label;
-    trh.appendChild(th);
-  });
-  thead.appendChild(trh);
-
-  if (!rows || !rows.length){
-    const tr = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = columns.length;
-    td.textContent = "لا توجد بيانات مسجلة لك حالياً.";
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-    return;
-  }
-
-  rows.forEach(r=>{
-    const tr = document.createElement("tr");
-    columns.forEach(c=>{
-      const td = document.createElement("td");
-      td.textContent = (r[c.key] ?? "").toString();
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-}
-
-
