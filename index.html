@@ -43,7 +43,8 @@
       <div class="k" style="margin-bottom:10px;color:rgba(255,255,255,.8)">الرقم التدريبي</div>
       <input class="inp" id="inpId" inputmode="numeric" placeholder="اكتب الرقم التدريبي" />
       <button class="btn" id="btnSearch">بحث</button>
-      <div class="error" id="errBox"></div>
+
+      <div class="error" id="errBox" style="display:none;"></div>
 
       <div class="miniRow">
         <button class="miniBtn" id="btnGoDash" style="display:none;">العودة للوحة الخدمات</button>
@@ -54,14 +55,14 @@
     </div>
   </div>
 
-  <script src="assets/app.js?v=999"></script>
+  <script src="assets/app.js?v=1001"></script>
   <script>
     const btn = qs("btnSearch");
     const inp = qs("inpId");
     const btnGoDash = qs("btnGoDash");
     const btnLogout = qs("btnLogout");
 
-    // إذا توجد جلسة، أعرض أزرار مساعدة
+    // أزرار مساعدة لو فيه جلسة
     const s = getSession();
     if (s?.id){
       btnGoDash.style.display = "inline-block";
@@ -70,30 +71,39 @@
       btnLogout.onclick = ()=> { clearSession(); location.replace("index.html"); };
     }
 
-    function onlyDigits(s){ return String(s||"").replace(/\D/g,""); }
+    function onlyDigits(x){ return String(x||"").replace(/\D/g,""); }
 
-    btn.addEventListener("click", async ()=>{
-      showError("errBox","");
+    async function doSearch(){
+      showError("errBox", "");
       btn.disabled = true;
 
       try{
         const id = onlyDigits(inp.value).trim();
-        if (!id){ showError("errBox","فضلاً أدخل الرقم التدريبي"); btn.disabled=false; return; }
+        if (!id){
+          showError("errBox","فضلاً أدخل الرقم التدريبي");
+          btn.disabled = false;
+          return;
+        }
 
         const t = await searchTraineeById(id);
-        if (!t){ showError("errBox","لم يتم العثور على متدرب بهذا الرقم"); btn.disabled=false; return; }
+        if (!t){
+          showError("errBox","لم يتم العثور على متدرب بهذا الرقم");
+          btn.disabled = false;
+          return;
+        }
 
         saveSession(t);
         location.replace("dashboard.html");
 
       }catch(e){
         console.error(e);
-        showError("errBox","تعذر الاتصال بالخادم. تحقق من رابط الـ API.");
-        btn.disabled=false;
+        showError("errBox","تعذر الاتصال بالخادم. تحقق من رابط الـ API أو صلاحية النشر.");
+        btn.disabled = false;
       }
-    });
+    }
 
-    inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") btn.click(); });
+    btn.addEventListener("click", doSearch);
+    inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doSearch(); });
   </script>
 </body>
 </html>
