@@ -1,5 +1,5 @@
 /***************
- * رابط الـ Web App (ضع رابطك العام بدون u/1)
+ * 
  ***************/
 const API_URL = "https://script.google.com/macros/s/AKfycbwhKWBTnVIpUUr3qvFz_bJ62dCpqH869d6-umOfATVE-HmvbTFhUCdC27XtkM6HRlxa-A/exec";
 
@@ -10,13 +10,14 @@ function qs(id){ return document.getElementById(id); }
 
 function setText(id, v){
   const el = qs(id);
-  if (el) el.textContent = (v !== undefined && v !== null && String(v).trim() !== "") ? v : "-";
+  if (!el) return;
+  el.textContent = (v !== undefined && v !== null && String(v).trim() !== "") ? v : "-";
 }
 
 function showError(id, msg){
   const el = qs(id);
   if (!el) return;
-  el.textContent = msg;
+  el.textContent = msg || "";
   el.style.display = msg ? "block" : "none";
 }
 
@@ -50,19 +51,18 @@ function requireSession(){
  * API GET (مع كسر الكاش)
  ***************/
 async function apiGet(params){
-  if (!API_URL || !API_URL.startsWith("http")) throw new Error("API_URL not set");
+  if (!API_URL || !API_URL.startsWith("http")) {
+    throw new Error("API_URL غير مضبوط في assets/app.js");
+  }
   params._t = Date.now(); // ✅ كسر الكاش
   const url = API_URL + "?" + new URLSearchParams(params).toString();
-
   const res = await fetch(url, { method:"GET" });
-  // لو مو JSON راح يفشل هنا ويطلع catch في الصفحات
+
+  // لو رجع HTML أو خطأ، هذا السطر سيكشف المشكلة
   const data = await res.json();
   return data;
 }
 
-/***************
-
- ***************/
 async function searchTraineeById(id){
   const data = await apiGet({ action:"trainee", id });
   if (data?.ok && data?.trainee) return data.trainee;
