@@ -46,19 +46,15 @@
         <div class="box"><div class="k">المستوى</div><div class="v" id="vLevel">-</div></div>
         <div class="box"><div class="k">مقر السكن</div><div class="v" id="vResidence">-</div></div>
         <div class="box"><div class="k">الحالة الصحية</div><div class="v" id="vHealth">-</div></div>
-        <div class="box" style="grid-column:1/-1">
-          <div class="k">رقم الجوال</div>
-          <div class="v ltr" id="vPhone">-</div>
-        </div>
+        <div class="box" style="grid-column:1/-1"><div class="k">رقم الجوال</div><div class="v ltr" id="vPhone">-</div></div>
       </div>
     </div>
   </div>
 
-  
-  <script src="assets/app.js?v=11"></script>
+  <!-- ✅ كسر كاش ملفات الموقع -->
+  <script src="assets/app.js?v=99"></script>
   <script>
     qs("btnHome").addEventListener("click", ()=> window.location.href="dashboard.html");
-
 
     const s = requireSession(); if(!s) throw new Error("No session");
     setText("vId", s.id);
@@ -67,12 +63,14 @@
       showError("errBox", "");
       try{
         const fresh = await searchTraineeById(s.id);
+        console.log("PROFILE fresh =", fresh);
+
         if (!fresh){
           showError("errBox", "لم يتم العثور على المتدرب في ورقة Trainees.");
           return;
         }
 
-    
+        // 
         saveSession(fresh);
 
         // 
@@ -97,4 +95,3 @@
   </script>
 </body>
 </html>
-
