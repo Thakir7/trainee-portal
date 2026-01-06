@@ -3,48 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>لوحة خدمات المتدرب</title>
+  <title>الخدمات</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .btnGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .bigBtn{
+      border:none;cursor:pointer;
+      padding:18px 12px;
+      border-radius:18px;
+      background: rgba(50, 210, 210, .85);
+      color:#06333a;
+      font-weight:900;
+      font-size:22px;
+      box-shadow:0 14px 26px rgba(0,0,0,.22);
+    }
+    @media (max-width:900px){
+      .btnGrid{grid-template-columns:1fr}
+    }
+  </style>
 </head>
 <body>
   <div class="app">
     <div class="topBar">
-      <h1 class="title" style="margin:0; font-size:28px;">الخدمات</h1>
-      <button class="homeBtn" id="btnLogout" title="خروج">⎋</button>
+      <h1 class="title" style="margin:0;font-size:32px;">الخدمات</h1>
+      <button class="homeBtn" id="btnLogout" title="تسجيل خروج">⦿</button>
     </div>
 
     <div class="card">
       <div class="infoBox">
-        <div class="infoItem">
-          <div class="k">اسم المتدرب</div>
-          <div class="v" id="vName">-</div>
-        </div>
-        <div class="infoItem">
-          <div class="k">الرقم التدريبي</div>
-          <div class="v" id="vId">-</div>
-        </div>
-        <div class="infoItem">
-          <div class="k">المرشد الأكاديمي</div>
-          <div class="v" id="vAdvisor">-</div>
-        </div>
+        <div class="infoItem"><div class="k">اسم المتدرب</div><div class="v" id="vName">-</div></div>
+        <div class="infoItem"><div class="k">الرقم التدريبي</div><div class="v" id="vId">-</div></div>
+        <div class="infoItem"><div class="k">المرشد الأكاديمي</div><div class="v" id="vAdvisor">-</div></div>
       </div>
 
-      <div class="grid">
-        <a class="navBtn" href="schedule.html">الجدول</a>
-        <a class="navBtn" href="activities.html">الأنشطة</a>
-        <a class="navBtn" href="excuses.html">الأعذار</a>
-        <a class="navBtn" href="profile.html">البيانات</a>
-        <a class="navBtn" href="contact.html">التواصل</a>
-        <a class="navBtn" href="violations.html">المخالفات</a>
+      <div class="error" id="errBox"></div>
+
+      <div class="btnGrid">
+        <button class="bigBtn" onclick="go('schedule.html')">الجدول</button>
+        <button class="bigBtn" onclick="go('activities.html')">الأنشطة</button>
+        <button class="bigBtn" onclick="go('excuses.html')">الأعذار</button>
+        <button class="bigBtn" onclick="go('violations.html')">المخالفات</button>
+        <button class="bigBtn" onclick="go('contact.html')">التواصل</button>
+        <button class="bigBtn" onclick="go('profile.html')">البيانات</button>
       </div>
 
       <div class="hint">اضغط على أي خدمة لعرض بياناتها</div>
     </div>
   </div>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=200"></script>
   <script>
-    renderHeaderSession();
+    function go(url){ window.location.href = url; }
+
+    // ✅ إذا ما فيه جلسة رجّع للبحث
+    const s = requireSession(); if(!s) throw new Error("No session");
+
+    // ✅ جلب أحدث بيانات من API لتحديث الرأس دائماً
+    async function loadFresh(){
+      showError("errBox","");
+      try{
+        const fresh = await searchTraineeById(s.id);
+        if (fresh){
+          saveSession(fresh);
+          setText("vName", fresh.name);
+          setText("vId", fresh.id);
+          setText("vAdvisor", fresh.advisor);
+        } else {
+          showError("errBox","لم يتم العثور على المتدرب. أعد البحث.");
+        }
+      }catch(e){
+        console.error(e);
+        // لو API_URL غير مضبوط سيظهر هنا
+        showError("errBox","تعذر الاتصال بالخادم. تحقق من رابط API في assets/app.js");
+        // نعرض من الجلسة كحل مؤقت
+        setText("vName", s.name);
+        setText("vId", s.id);
+        setText("vAdvisor", s.advisor);
+      }
+    }
+
+    loadFresh();
 
     qs("btnLogout").addEventListener("click", ()=>{
       clearSession();
