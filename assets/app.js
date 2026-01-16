@@ -1,35 +1,93 @@
-const API_URL = "https://script.google.com/macros/u/1/s/AKfycbxv9vlzDiZEv8rB9nRF6Dm7OkU5ophr7eyydSXQ8lt5romkgdj88kZ1LjKcUEl4S_ry6A/exec";
+// ✅ رابط Web App الصحيح
+const API_URL = "https://script.google.com/macros/s/AKfycbwhKWBTnVIpUUr3qvFz_bJ62dCpqH869d6-umOfATVE-HmvbTFhUCdC27XtkM6HRlxa-A/exec";
 
-function saveSession(data){
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("student", JSON.stringify(data.student));
-}
-function getToken(){ return localStorage.getItem("token"); }
-function getStudent(){ return JSON.parse(localStorage.getItem("student")||"null"); }
+// ===== أدوات =====
+function qs(id){ return document.getElementById(id); }
 
-function logout(){
-  localStorage.removeItem("token");
-  localStorage.removeItem("student");
-  localStorage.removeItem("admin_ok");
-  location.href = "index.html";
-}
-function requireLogin(){
-  if(!getToken()) location.href="index.html";
+function setText(id, v){
+  const el = qs(id);
+  if (!el) return;
+  el.textContent = (v !== undefined && v !== null && String(v).trim() !== "") ? v : "-";
 }
 
-async function api(action, payload={}){
-  // إرسال JSON كنص plain لتفادي CORS preflight
-  const body = JSON.stringify({ action, token:getToken(), ...payload });
+function showError(id, msg){
+  const el = qs(id);
+  if (!el) return;
+  el.textContent = msg || "";
+  el.style.display = msg ? "block" : "none";
+}
 
-  const res = await fetch(API_URL, {
-    method:"POST",
-    body
-  });
+// ===== جلسة المتدرب (متوافقة مع القديم والجديد) =====
+const LS_KEY = "trainee_session";
+const SS_KEY = "trainee";
 
-  const data = await res.json().catch(()=>({ok:false, message:"فشل قراءة الرد"}));
-  if (!data || data.ok === false) throw new Error(data.message || "خطأ غير معروف");
+function saveSession(trainee){
+  const payload = JSON.stringify(trainee);
+  localStorage.setItem(LS_KEY, payload);
+  sessionStorage.setItem(SS_KEY, payload);
+}
+
+function getSession(){
+  let raw = localStorage.getItem(LS_KEY);
+  if (raw) { try { return JSON.parse(raw); } catch {} }
+
+  raw = sessionStorage.getItem(SS_KEY);
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      if (s?.id) localStorage.setItem(LS_KEY, JSON.stringify(s));
+      return s;
+    } catch {}
+  }
+  return null;
+}
+
+function clearSession(){
+  localStorage.removeItem(LS_KEY);
+  sessionStorage.removeItem(SS_KEY);
+}
+
+function isIndexPage(){
+  const p = (location.pathname || "").toLowerCase();
+  return p.endsWith("/trainee-portal/") || p.endsWith("/trainee-portal") || p.endsWith("/index.html");
+}
+
+function requireSession(){
+  const s = getSession();
+  if (!s || !s.id){
+    if (!isIndexPage()) location.replace("index.html");
+    return null;
+  }
+  return s;
+}
+
+// ===== API GET =====
+async function apiGet(params){
+  if (!API_URL || !API_URL.startsWith("http")) throw new Error("API_URL not set");
+  params._t = Date.now();
+  const url = API_URL + "?" + new URLSearchParams(params).toString();
+
+  const res = await fetch(url, { method:"GET" });
+  const text = await res.text();
+
+  // حماية لو رجع HTML بدل JSON
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error("API did not return JSON"); }
+
   return data;
 }
 
-function setText(id, t){ const el=document.getElementById(id); if(el) el.textContent=t; }
-function qs(k){ return new URLSearchParams(location.search).get(k); }
+async function searchTraineeById(id){
+  const data = await apiGet({ action:"trainee", id });
+  if (data?.ok && data?.trainee) return data.trainee;
+  return null;
+}
+
+function fillHeaderFromSession(){
+  const s = getSession();
+  if (!s) return;
+  setText("vName", s.name);
+  setText("vId", s.id);
+  setText("vAdvisor", s.advisor);
+}
